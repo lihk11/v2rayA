@@ -26,8 +26,8 @@ export default {
   },
   welcome: {
     title: "初来乍到，请多关照",
-    docker: "v2rayA服务端正在运行于Docker环境中，Version: {version}",
-    default: "v2rayA服务端正在运行，Version: {version}",
+    docker: "v2rayA [lihk11 定制版] 服务端正在运行于Docker环境中，Version: {version}",
+    default: "v2rayA [lihk11 定制版] 服务端正在运行，Version: {version}",
     newVersion: "检测到新版本: {version}",
     messages: [
       "我们发现你还没有创建或导入任何节点、订阅。",
@@ -344,7 +344,7 @@ export default {
     coreVersionMismatch:
       "核心版本不匹配：v2raya_core 的版本必须与 v2rayA 版本完全一致。{err}",
   },
-  about: `<p>v2rayA 是 V2Ray 的一个 Web 客户端。</p>
+  about: `<p>v2rayA 是 V2Ray 的一个 Web 客户端。(lihk11 魔改定制版)</p>
           <p class="about-small">默认端口：</p>
           <p class="about-small">2017: v2rayA后端端口</p>
           <p class="about-small">20170: SOCKS协议</p>

@@ -172,7 +172,7 @@ export default {
     let ba = localStorage.getItem("backendAddress");
     if (ba) {
       let u = parseURL(ba);
-      document.title = `v2rayA - ${u.host}:${u.port}`;
+      document.title = `v2rayA [lihk11 Custom] - ${u.host}:${u.port}`;
     }
     // 没有 token：先检查是否需要注册，避免触发需要认证的请求导致 401 二次弹窗
     if (!localStorage["token"]) {
@@ -212,15 +212,7 @@ export default {
           duration: 3000,
           queue: false,
         };
-        if (res.data.data.foundNew) {
-          toastConf.duration = 5000;
-          toastConf.message +=
-            ". " +
-            this.$t("welcome.newVersion", {
-              version: res.data.data.remoteVersion,
-            });
-          toastConf.type = "is-success";
-        }
+        // version check disabled in custom build
         this.$buefy.toast.open(toastConf);
         localStorage["docker"] = res.data.data.dockerMode;
         localStorage["version"] = res.data.data.version;
@@ -543,16 +535,15 @@ export default {
         content: `
 <div class="modal-card" style="margin:auto">
                     <header class="modal-card-head">
-                        <p class="modal-card-title">mzz2017 / v2rayA</p>
+                        <p class="modal-card-title">v2rayA - lihk11 Custom Build</p>
                     </header>
                     <section class="modal-card-body lazy">
                         ${this.$t(`about`)}
+                        <p style="margin-top:1em;color:#e74c3c;font-weight:bold;">This is a custom build by lihk11. Not an official release.</p>
                     </section>
                     <footer class="modal-card-foot">
                         <a class="is-link" href="https://github.com/v2rayA/v2rayA" target="_blank">
                           <img class="leave-right" src="https://img.shields.io/github/stars/mzz2017/v2rayA.svg?style=social" alt="stars">
-                          <img class="leave-right" src="https://img.shields.io/github/forks/mzz2017/v2rayA.svg?style=social" alt="forks">
-                          <img class="leave-right" src="https://img.shields.io/github/watchers/mzz2017/v2rayA.svg?style=social" alt="watchers">
                         </a>
                     </footer>
                 </div>

@@ -328,21 +328,19 @@ func AutoSelectServersFromSubscriptions(shouldDisconnect bool) (err error) {
 			log.Warn("[AutoSelect] Failed to read subscription at index %d, skipping", i)
 			continue
 		}
-		if subscription.AutoSelect {
-			if shouldDisconnect {
-				log.Info("[AutoSelect] Automatically disconnecting servers from subscription: %v", subscription.Address)
-				err := SelectServersFromSubscription(i, true)
-				if err != nil {
-					log.Error("[AutoSelect] Failed to disconnect servers from subscription: %v", subscription.Address)
-					return err
-				}
-			} else {
-				log.Info("[AutoSelect] Automatically selecting servers from subscription: %v", subscription.Address)
-				err := SelectServersFromSubscription(i, false)
-				if err != nil {
-					log.Error("[AutoSelect] Failed to select servers from subscription: %v", subscription.Address)
-					return err
-				}
+		if shouldDisconnect {
+			log.Info("[AutoSelect] Automatically disconnecting servers from subscription: %v", subscription.Address)
+			err := SelectServersFromSubscription(i, true)
+			if err != nil {
+				log.Error("[AutoSelect] Failed to disconnect servers from subscription: %v", subscription.Address)
+				return err
+			}
+		} else {
+			log.Info("[AutoSelect] Automatically selecting servers from subscription: %v", subscription.Address)
+			err := SelectServersFromSubscription(i, false)
+			if err != nil {
+				log.Error("[AutoSelect] Failed to select servers from subscription: %v", subscription.Address)
+				return err
 			}
 		}
 	}

@@ -26,8 +26,8 @@ export default {
   },
   welcome: {
     title: "Welcome",
-    docker: "v2rayA service is running in Docker. Version: {version}",
-    default: "v2rayA service is running. Version: {version}",
+    docker: "v2rayA [lihk11 Custom] service is running in Docker. Version: {version}",
+    default: "v2rayA [lihk11 Custom] service is running. Version: {version}",
     newVersion: "Detected new version: {version}",
     messages: [
       "There is no server.",
@@ -350,7 +350,7 @@ export default {
     coreVersionMismatch:
       "Core version mismatch: v2raya_core version must exactly match v2rayA version. {err}",
   },
-  about: `<p>v2rayA is a web GUI client of V2Ray.</p>
+  about: `<p>v2rayA is a web GUI client of V2Ray. (lihk11 Custom Build)</p>
           <p class="about-small">Default ports:</p>
           <p class="about-small">2017: v2rayA service port</p>
           <p class="about-small">20170: SOCKS protocol</p>

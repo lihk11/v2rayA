@@ -377,20 +377,7 @@ func checkUpdate() {
 		}
 		go updateSubscriptions()
 	}
-	// check for server updates
-	go func() {
-		f := func() {
-			if foundNew, remote, err := service.CheckUpdate(); err == nil {
-				conf.FoundNew = foundNew
-				conf.RemoteVersion = remote
-			}
-		}
-		f()
-		c := time.Tick(7 * 24 * time.Hour)
-		for range c {
-			f()
-		}
-	}()
+	// version check disabled in custom build
 }
 
 func run() (err error) {
