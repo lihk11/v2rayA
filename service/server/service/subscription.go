@@ -245,19 +245,12 @@ func UpdateSubscription(index int, disconnectIfNecessary bool) (err error) {
 		}
 		infoServerRaws[i] = infoServerRaw
 	}
-	for link, cssIndexes := range connectedVmessInfo2CssIndex {
+	for _, cssIndexes := range connectedVmessInfo2CssIndex {
 		for _, cssIndex := range cssIndexes {
-			if disconnectIfNecessary {
-				err = Disconnect(*css.Get()[cssIndex], false)
-				if err != nil {
-					reason := "failed to disconnect previous server"
-					return fmt.Errorf("UpdateSubscription: %v", reason)
-				}
-			} else {
-				// Append previously connected node
-				// TODO: may need consideration when ServerRaw changes
-				infoServerRaws = append(infoServerRaws, *link2Raw[link])
-				cssAfter[cssIndex].ID = len(infoServerRaws)
+			err = Disconnect(*css.Get()[cssIndex], false)
+			if err != nil {
+				reason := "failed to disconnect previous server"
+				return fmt.Errorf("UpdateSubscription: %v", reason)
 			}
 		}
 	}
