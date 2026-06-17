@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/tidwall/gjson"
@@ -114,18 +115,21 @@ func ListGet(bucket string, key string, index int) (b []byte, err error) {
 		}
 		defer rows.Close()
 
-		var servers []gjson.Result
+		var serverRaws []string
 		for rows.Next() {
 			var s string
 			if err := rows.Scan(&s); err != nil {
 				return nil, err
 			}
-			servers = append(servers, gjson.Parse(s))
+			serverRaws = append(serverRaws, s)
 		}
 
-		serversJSON, _ := jsoniter.Marshal(servers)
+		serversJSON := "[]"
+		if len(serverRaws) > 0 {
+			serversJSON = "[" + strings.Join(serverRaws, ",") + "]"
+		}
 		result := fmt.Sprintf(`{"address":"%s","status":"%s","info":"%s","servers":%s}`,
-			address, status, info, string(serversJSON))
+			address, status, info, serversJSON)
 		return []byte(result), nil
 
 	default:
@@ -265,20 +269,23 @@ func ListGetAll(bucket string, key string) (list [][]byte, err error) {
 				return nil, err
 			}
 
-			var servers []gjson.Result
+			var serverRaws []string
 			for serverRows.Next() {
 				var s string
 				if err := serverRows.Scan(&s); err != nil {
 					serverRows.Close()
 					return nil, err
 				}
-				servers = append(servers, gjson.Parse(s))
+				serverRaws = append(serverRaws, s)
 			}
 			serverRows.Close()
 
-			serversJSON, _ := jsoniter.Marshal(servers)
+			serversJSON := "[]"
+			if len(serverRaws) > 0 {
+				serversJSON = "[" + strings.Join(serverRaws, ",") + "]"
+			}
 			result := fmt.Sprintf(`{"address":"%s","status":"%s","info":"%s","servers":%s}`,
-				address, status, info, string(serversJSON))
+				address, status, info, serversJSON)
 			list = append(list, []byte(result))
 		}
 		return list, rows.Err()

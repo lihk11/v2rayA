@@ -2,7 +2,6 @@ package service
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"github.com/v2rayA/v2rayA/common"
 	"github.com/v2rayA/v2rayA/core/iptables"
@@ -54,12 +53,16 @@ func isVersionSatisfied(version string) (where.Variant, error) {
 }
 
 func CheckV5() (variant where.Variant, err error) {
-	variant, err = isVersionSatisfied("5.0.0")
+	variant, ver, err := where.GetV2rayServiceVersion()
 	if err != nil {
-		if errors.Is(err, LowVersionError) && variant != where.V2ray {
-			return variant, nil
-		}
 		return variant, err
+	}
+	// v2raya_core is xray-based and does not follow v2ray v5 versioning
+	if variant == where.V2rayaCore {
+		return variant, nil
+	}
+	if greaterEqual, err := common.VersionGreaterEqual(ver, "5.0.0"); err != nil || !greaterEqual {
+		return variant, fmt.Errorf("%w: the version %v is lower than 5.0.0", LowVersionError, ver)
 	}
 	return variant, nil
 }
