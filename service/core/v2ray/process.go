@@ -222,9 +222,11 @@ func StartCoreProcess(ctx context.Context) (*os.Process, error) {
 		return nil, err
 	}
 
-	// Check that the core version matches the v2raya version exactly.
-	if err := where.CheckCoreVersion(v2rayBinPath, conf.Version); err != nil {
-		return nil, fmt.Errorf("core version check failed: %w", err)
+	// Check that the core version matches the v2raya version (only for v2raya_core merged binary).
+	if strings.ToLower(filepath.Base(v2rayBinPath)) == "v2raya_core" {
+		if err := where.CheckCoreVersion(v2rayBinPath, conf.Version); err != nil {
+			return nil, fmt.Errorf("core version check failed: %w", err)
+		}
 	}
 	dir := filepath.Dir(v2rayBinPath)
 	var arguments = []string{

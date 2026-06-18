@@ -42,20 +42,20 @@ func ListSet(bucket string, key string, index int, val interface{}) (err error) 
 		status := parsed.Get("status").String()
 		info := parsed.Get("info").String()
 
-		result, err := db.Exec(
-			"UPDATE subscriptions SET address = ?, status = ?, info = ?, updated_at = CURRENT_TIMESTAMP WHERE sort = ?",
-			address, status, info, index,
+		var subID int64
+		err = db.QueryRow("SELECT id FROM subscriptions WHERE sort = ?", index).Scan(&subID)
+		if err != nil {
+			return fmt.Errorf("ListSet: subscription at index %d not found", index)
+		}
+
+		_, err = db.Exec(
+			"UPDATE subscriptions SET address = ?, status = ?, info = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+			address, status, info, subID,
 		)
 		if err != nil {
 			return err
 		}
-		rows, _ := result.RowsAffected()
-		if rows == 0 {
-			return fmt.Errorf("ListSet: subscription at index %d not found", index)
-		}
 
-		// Update servers within this subscription
-		subID := int64(index + 1)
 		db.Exec("DELETE FROM servers WHERE type = 'subscription_server' AND sub_id = ?", subID)
 
 		servers := parsed.Get("servers").Array()
@@ -94,10 +94,11 @@ func ListGet(bucket string, key string, index int) (b []byte, err error) {
 		return []byte(configJSON), nil
 
 	case "touch/subscriptions":
+		var subID int64
 		var address, status, info string
 		err = db.QueryRow(
-			"SELECT address, status, info FROM subscriptions WHERE sort = ?", index,
-		).Scan(&address, &status, &info)
+			"SELECT id, address, status, info FROM subscriptions WHERE sort = ?", index,
+		).Scan(&subID, &address, &status, &info)
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("ListGet: can't get element from an empty list")
 		}
@@ -108,7 +109,7 @@ func ListGet(bucket string, key string, index int) (b []byte, err error) {
 		// Reconstruct the subscription JSON with servers
 		rows, err := db.Query(
 			"SELECT config_json FROM servers WHERE type = 'subscription_server' AND sub_id = ? ORDER BY sort",
-			int64(index+1),
+			subID,
 		)
 		if err != nil {
 			return nil, err

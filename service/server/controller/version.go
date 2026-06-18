@@ -3,7 +3,9 @@ package controller
 import (
 	"net/http"
 	"os"
+	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/v2rayA/v2rayA/common"
@@ -33,13 +35,16 @@ func GetVersion(ctx *gin.Context) {
 
 	variant, versionErr := service.CheckV5()
 
-	// Check core version match
+	// Check core version match (only for v2raya_core merged binary)
 	coreVersionValid := true
 	var coreVersionErr string
 	if v2rayBinPath, err := where.GetV2rayBinPath(); err == nil {
-		if err := where.CheckCoreVersion(v2rayBinPath, conf.Version); err != nil {
-			coreVersionValid = false
-			coreVersionErr = err.Error()
+		if where.DetectCoreTypeByBinaryName(v2rayBinPath) == where.V2rayaCore &&
+			strings.ToLower(filepath.Base(v2rayBinPath)) == "v2raya_core" {
+			if err := where.CheckCoreVersion(v2rayBinPath, conf.Version); err != nil {
+				coreVersionValid = false
+				coreVersionErr = err.Error()
+			}
 		}
 	}
 
