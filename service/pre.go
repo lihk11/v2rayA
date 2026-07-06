@@ -287,6 +287,15 @@ func hello() {
 }
 
 func updateSubscriptions() {
+	wasRunning := v2ray.ProcessManager.Running()
+	defer func() {
+		if wasRunning && !v2ray.ProcessManager.Running() {
+			if err := service.StartV2ray(); err != nil {
+				log.Error("[AutoUpdate] Failed to restore v2ray-core after updating subscriptions -- err: %v", err)
+			}
+		}
+	}()
+
 	subs := configure.GetSubscriptions()
 	lenSubs := len(subs)
 	control := make(chan struct{}, 2) // concurrency limit: update 2 subscriptions at a time
