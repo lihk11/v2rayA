@@ -287,11 +287,16 @@ func hello() {
 }
 
 func updateSubscriptions() {
-	wasRunning := v2ray.ProcessManager.Running()
+	wasRunning := v2ray.ProcessManager.Running() || configure.GetRunning()
 	defer func() {
-		if wasRunning && !v2ray.ProcessManager.Running() {
-			if err := service.StartV2ray(); err != nil {
-				log.Error("[AutoUpdate] Failed to restore v2ray-core after updating subscriptions -- err: %v", err)
+		if wasRunning {
+			_ = configure.SetRunning(true)
+			if css := configure.GetConnectedServers(); css.Len() == 0 {
+				log.Error("[AutoUpdate] Skip refreshing v2ray-core after updating subscriptions: no server is selected")
+				return
+			}
+			if err := v2ray.UpdateV2RayConfig(); err != nil {
+				log.Error("[AutoUpdate] Failed to refresh v2ray-core after updating subscriptions -- err: %v", err)
 			}
 		}
 	}()
@@ -301,10 +306,9 @@ func updateSubscriptions() {
 	control := make(chan struct{}, 2) // concurrency limit: update 2 subscriptions at a time
 	// Disconnect from subscriptions before auto-selecting servers from them
 	// to limit the number of connected servers and avoid hitting the limit
-	shouldDisconnect := true
-	err := service.AutoSelectServersFromSubscriptions(shouldDisconnect)
+	err := configure.ClearConnects("proxy")
 	if err != nil {
-		log.Error("[AutoSelect] Failed to disconnect servers from subscriptions -- err: %v", err)
+		log.Error("[AutoSelect] Failed to clear servers from subscriptions -- err: %v", err)
 	}
 	wg := new(sync.WaitGroup)
 	for i := 0; i < lenSubs; i++ {
@@ -322,12 +326,61 @@ func updateSubscriptions() {
 		}(i)
 	}
 	wg.Wait()
-	shouldDisconnect = false
-	err2 := service.AutoSelectServersFromSubscriptions(shouldDisconnect)
+	err2 := autoSelectServersFromSubscriptionsWithoutReload()
 	if err2 != nil {
 		log.Error("[AutoSelect] Failed to auto-select servers from subscriptions -- err: %v", err2)
 	}
 
+}
+
+func autoSelectServersFromSubscriptionsWithoutReload() (err error) {
+	for i := 0; i < configure.GetLenSubscriptions(); i++ {
+		subscription := configure.GetSubscription(i)
+		if subscription == nil {
+			log.Warn("[AutoSelect] Failed to read subscription at index %d, skipping", i)
+			continue
+		}
+		log.Info("[AutoSelect] Automatically selecting servers from subscription: %v", subscription.Address)
+		if err := selectServersFromSubscriptionWithoutReload(i); err != nil {
+			log.Error("[AutoSelect] Failed to select servers from subscription: %v", subscription.Address)
+			return err
+		}
+	}
+	return nil
+}
+
+func selectServersFromSubscriptionWithoutReload(index int) (err error) {
+	var subscriptionServer configure.Which
+	subscriptionServer.TYPE = configure.SubscriptionServerType
+	subscriptionServer.Sub = index
+	subscriptionServer.Outbound = "proxy"
+
+	for i := 1; i < configure.GetLenSubscriptionServers(index)+1; i++ {
+		subscriptionServer.ID = i
+		sub := configure.GetSubscription(index)
+		if sub == nil {
+			return fmt.Errorf("selectServersFromSubscriptionWithoutReload: subscription at index %d not found", index)
+		}
+		serverObj := sub.Servers[i-1].ServerObj
+		if serverObj == nil {
+			log.Warn("[AutoSelect] Skipping server %d in subscription %d: nil ServerObj", i, index)
+			continue
+		}
+		serverName := serverObj.GetName()
+
+		isSupported, _ := service.IsSupported(subscriptionServer)
+		if !isSupported {
+			log.Info("[AutoSelect] Skipping unsupported server %v", serverName)
+			continue
+		}
+
+		if err := configure.AddConnect(subscriptionServer); err != nil {
+			log.Error("[AutoSelect] Failed to select server: %v", serverName)
+			return err
+		}
+		log.Info("[AutoSelect] Automatically selected server: %v", serverName)
+	}
+	return nil
 }
 
 func initUpdatingTicker() {

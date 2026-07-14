@@ -264,6 +264,7 @@ func (m *CoreProcessManager) Start(t *Template) (err error) {
 	}()
 
 	configure.SetRunning(true)
+	ApiFeed.ProductMessage("running_state", map[string]interface{}{"running": true})
 	return nil
 }
 
